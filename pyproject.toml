@@ -1,0 +1,10 @@
+[project]
+name = "utf-tech-foods-api"
+version = "0.1.0"
+description = "REST API for restaurant menu categories and published dishes using Django and DRF."
+readme = "README.md"
+authors = [
+    { name = "Vlad Korneev", email = "veenrok@veenrok.com" }
+]
+requires-python = ">=3.13"
+dependencies = []
