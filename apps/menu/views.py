@@ -1,7 +1,7 @@
-from django.db.models import Exists, Prefetch, OuterRef
-from apps.menu.models import FoodCategory, Food
+from django.db.models import Exists, OuterRef, Prefetch
 from rest_framework.generics import ListAPIView
 
+from apps.menu.models import Food, FoodCategory
 from apps.menu.serializers import FoodListSerializer
 
 
