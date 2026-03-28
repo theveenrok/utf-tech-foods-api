@@ -32,7 +32,7 @@ class FoodListAPI(TestCase):
             category=self.category_with_published_and_hidden_foods,
             code=1,
             internal_code=100,
-            name_ru="Published food",
+            name_ru="Published aditional food",
             cost=100.00,
             is_publish=True,
         )
@@ -41,7 +41,7 @@ class FoodListAPI(TestCase):
             category=self.category_with_only_hidden_foods,
             code=2,
             internal_code=200,
-            name_ru="Hidden food",
+            name_ru="Hidden additional food",
             cost=50.00,
             is_publish=False,
         )
@@ -50,7 +50,7 @@ class FoodListAPI(TestCase):
         Food.objects.create(
             category=self.category_with_published_and_hidden_foods,
             code=1,
-            internal_code=105,
+            internal_code=101,
             name_ru="Published food without additional",
             cost=100.00,
             is_publish=True,
@@ -59,7 +59,7 @@ class FoodListAPI(TestCase):
         Food.objects.create(
             category=self.category_with_published_and_hidden_foods,
             code=2,
-            internal_code=103,
+            internal_code=102,
             name_ru="Published food with additional hidden food",
             cost=50.00,
             is_publish=True,
@@ -68,10 +68,37 @@ class FoodListAPI(TestCase):
         Food.objects.create(
             category=self.category_with_published_and_hidden_foods,
             code=2,
-            internal_code=104,
+            internal_code=103,
             name_ru="Published food with additional published food",
             cost=50.00,
             is_publish=True,
+        ).additional.add(published_food)
+
+        Food.objects.create(
+            category=self.category_with_published_and_hidden_foods,
+            code=2,
+            internal_code=104,
+            name_ru="Hidden food without additional",
+            cost=50.00,
+            is_publish=False,
+        )
+
+        Food.objects.create(
+            category=self.category_with_published_and_hidden_foods,
+            code=1,
+            internal_code=105,
+            name_ru="Hidden food with additional hidden foods",
+            cost=200.00,
+            is_publish=False,
+        ).additional.add(hidden_food)
+
+        Food.objects.create(
+            category=self.category_with_published_and_hidden_foods,
+            code=1,
+            internal_code=106,
+            name_ru="Hidden food with additional pulished foods",
+            cost=200.00,
+            is_publish=False,
         ).additional.add(published_food)
 
         # Foods for category with only hidden foods
@@ -109,21 +136,33 @@ class FoodListAPI(TestCase):
 
     def test_categories_without_published_foods_excluded(self) -> None:
         self.assertEqual(len(self.response.json()), 1)
+        self.assertEqual(
+            self.response.json()[0]["id"],
+            self.category_with_published_and_hidden_foods.id,
+        )
 
     def test_unpublished_foods_excluded(self) -> None:
-        published_foods_internal_codes = Food.objects.filter(
-            is_publish=True
-        ).values_list("internal_code", flat=True)
         for category in self.response.json():
+            published_foods_internal_codes = Food.objects.filter(
+                category_id=category["id"],
+                is_publish=True,
+            ).values_list("internal_code", flat=True)
+            self.assertEqual(
+                len(published_foods_internal_codes), len(category["foods"])
+            )
             for food in category["foods"]:
                 self.assertIn(food["internal_code"], published_foods_internal_codes)
 
     def test_unpublished_foods_excluded_from_additional(self) -> None:
-        published_foods_internal_codes = Food.objects.filter(
-            is_publish=True
-        ).values_list("internal_code", flat=True)
         for category in self.response.json():
             for food in category["foods"]:
+                published_foods_internal_codes = Food.objects.filter(
+                    additional_from__internal_code=food["internal_code"],
+                    is_publish=True,
+                ).values_list("internal_code", flat=True)
+                self.assertEqual(
+                    len(published_foods_internal_codes), len(food["additional"])
+                )
                 for additional_internal_code in food["additional"]:
                     self.assertIn(
                         additional_internal_code, published_foods_internal_codes
