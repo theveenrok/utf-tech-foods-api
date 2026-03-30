@@ -10,7 +10,10 @@ class FoodsListAPIView(ListAPIView):
 
     def get_queryset(self):
         published_foods_qs = Food.objects.filter(is_publish=True)
-        aditional_foods_prefetch = Prefetch("additional", queryset=published_foods_qs)
+        aditional_foods_prefetch = Prefetch(
+            "additional",
+            queryset=published_foods_qs.filter(internal_code__isnull=False),
+        )
         foods_prefetch = Prefetch(
             "foods",
             queryset=published_foods_qs.prefetch_related(aditional_foods_prefetch),
